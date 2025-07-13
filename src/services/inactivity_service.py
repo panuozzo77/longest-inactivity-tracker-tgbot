@@ -59,6 +59,9 @@ class InactivityService:
 
             return interval, last_user_info
 
+        # Save all changes to the database
+        self.storage.save()
+
         return None
 
     def get_current_record(self, group_id: int) -> float:

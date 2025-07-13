@@ -36,7 +36,7 @@ class JsonStorage(StorageInterface):
             # If the file is corrupted or unreadable, start with a fresh data structure
             return {"groups": {}}
 
-    def _save_data(self) -> None:
+    def save(self) -> None:
         """Saves the current data to the JSON file."""
         try:
             with open(self.db_path, 'w') as f:
@@ -75,7 +75,6 @@ class JsonStorage(StorageInterface):
     def set_record(self, group_id: int, record_seconds: float) -> None:
         group_data = self._get_group_data(group_id)
         group_data["record_seconds"] = record_seconds
-        self._save_data()
 
     def get_last_message_timestamp(self, group_id: int) -> Optional[float]:
         group_data = self._get_group_data(group_id)
@@ -84,7 +83,6 @@ class JsonStorage(StorageInterface):
     def set_last_message_timestamp(self, group_id: int, timestamp: float) -> None:
         group_data = self._get_group_data(group_id)
         group_data["last_message_timestamp"] = timestamp
-        self._save_data()
 
     def get_last_user_info(self, group_id: int) -> Optional[Dict[str, Any]]:
         group_data = self._get_group_data(group_id)
@@ -93,7 +91,6 @@ class JsonStorage(StorageInterface):
     def set_last_user_info(self, group_id: int, user_info: Dict[str, Any]) -> None:
         group_data = self._get_group_data(group_id)
         group_data["last_user_info"] = user_info
-        self._save_data()
 
     def get_group_config(self, group_id: int) -> Dict[str, Any]:
         group_data = self._get_group_data(group_id)
@@ -102,7 +99,6 @@ class JsonStorage(StorageInterface):
     def set_group_config(self, group_id: int, config: Dict[str, Any]) -> None:
         group_data = self._get_group_data(group_id)
         group_data["config"] = config
-        self._save_data()
 
     def get_leaderboard(self, group_id: int) -> Dict[str, Dict[str, Dict[str, Any]]]:
         group_data = self._get_group_data(group_id)
@@ -120,7 +116,6 @@ class JsonStorage(StorageInterface):
         # Update name in case it has changed
         leaderboards[board][user_id_str]["name"] = user_name
         
-        self._save_data()
 
     def get_history(self, group_id: int) -> List[Dict[str, Any]]:
         group_data = self._get_group_data(group_id)
@@ -130,4 +125,3 @@ class JsonStorage(StorageInterface):
         group_data = self._get_group_data(group_id)
         history = group_data.get("history", [])
         history.append(record_entry)
-        self._save_data()

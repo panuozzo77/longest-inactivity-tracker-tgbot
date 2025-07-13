@@ -73,6 +73,17 @@ python src/main.py
 
 The bot will start polling for updates from Telegram. You can add it to your groups and start using its commands.
 
+### Important: Disabling Group Privacy
+
+For the bot to read all messages in a group, you must disable its "Group Privacy" mode.
+
+1.  Open a chat with `@BotFather` on Telegram.
+2.  Send the command `/mybots` and select your bot.
+3.  Go to **Bot Settings** -> **Group Privacy**.
+4.  Click **"Turn off"**.
+
+Without this step, the bot will only recognize commands and will not be able to track inactivity.
+
 ## Bot Commands
 
 *   `/start` or `/help` - Shows the help message with all available commands.

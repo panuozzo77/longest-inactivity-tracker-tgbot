@@ -111,6 +111,13 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
+    def save(self) -> None:
+        """
+        Persists the current state of the data to the storage medium.
+        """
+        pass
+
+    @abstractmethod
     def get_group_config(self, group_id: int) -> Dict[str, Any]:
         """
         Retrieves the configuration settings for a given group.
