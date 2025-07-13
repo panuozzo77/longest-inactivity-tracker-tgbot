@@ -94,6 +94,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/seed <minutes> - Set an initial record to prevent initial spam.\n"
         "/leaderboard - Show the leaderboard for record setters.\n"
         "/history - Show the last 5 records.\n"
+        "/clean - Reset all stats for this group.\n"
         "/help - Show this help message."
     )
 
@@ -170,3 +171,17 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response += f"- Set by: {breaker_name} (broke the silence from {last_user_name})\n\n"
 
     await update.message.reply_text(response, parse_mode='Markdown')
+
+async def clean_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the /clean command to reset all group stats."""
+    if not update.message:
+        return
+    
+    # This is a sensitive command, so we might want to add admin checks in a real bot.
+    # For now, we'll allow anyone to use it.
+    
+    group_id = update.message.chat_id
+    inactivity_service: InactivityService = context.bot_data["inactivity_service"]
+    inactivity_service.clean_stats(group_id)
+    
+    await update.message.reply_text("🧹 All stats for this group have been reset.")

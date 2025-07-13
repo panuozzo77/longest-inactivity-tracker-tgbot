@@ -91,3 +91,9 @@ class InactivityService:
         :param seconds: The initial record in seconds.
         """
         self.storage.set_record(group_id, seconds)
+        self.storage.save()
+
+    def clean_stats(self, group_id: int) -> None:
+        """Deletes all stats for a specific group."""
+        self.storage.delete_group_data(group_id)
+        self.storage.save()

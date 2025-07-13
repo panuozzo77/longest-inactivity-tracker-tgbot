@@ -118,6 +118,15 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
+    def delete_group_data(self, group_id: int) -> None:
+        """
+        Deletes all data associated with a specific group.
+
+        :param group_id: The unique identifier for the group.
+        """
+        pass
+
+    @abstractmethod
     def get_group_config(self, group_id: int) -> Dict[str, Any]:
         """
         Retrieves the configuration settings for a given group.

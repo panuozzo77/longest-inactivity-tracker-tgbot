@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from .bot.handlers import (handle_message, help_command, record_command,
                               toggle_announcements_command, seed_command,
-                              leaderboard_command, history_command)
+                              leaderboard_command, history_command, clean_command)
 from .services.config_service import ConfigService
 from .services.inactivity_service import InactivityService
 from .storage.json_storage import JsonStorage
@@ -49,6 +49,7 @@ def main() -> None:
     application.add_handler(CommandHandler("seed", seed_command))
     application.add_handler(CommandHandler("leaderboard", leaderboard_command))
     application.add_handler(CommandHandler("history", history_command))
+    application.add_handler(CommandHandler("clean", clean_command))
 
     # Handle all messages from users to check for inactivity
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

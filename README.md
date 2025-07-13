@@ -92,6 +92,7 @@ Without this step, the bot will only recognize commands and will not be able to 
 *   `/seed <minutes>` - Sets an initial inactivity record for the specified number of minutes. This is useful to prevent spam when the bot is first added to a group.
 *   `/leaderboard` - Shows the top 5 users for the "Last Word" and "Silence Breaker" awards.
 *   `/history` - Displays the last 5 inactivity records that were set in the group.
+*   `/clean` - Deletes all stored data for the group, including records, leaderboards, and history.
 
 ## Development (VS Code)
 

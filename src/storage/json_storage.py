@@ -125,3 +125,8 @@ class JsonStorage(StorageInterface):
         group_data = self._get_group_data(group_id)
         history = group_data.get("history", [])
         history.append(record_entry)
+
+    def delete_group_data(self, group_id: int) -> None:
+        group_id_str = str(group_id)
+        if group_id_str in self.data["groups"]:
+            del self.data["groups"][group_id_str]
