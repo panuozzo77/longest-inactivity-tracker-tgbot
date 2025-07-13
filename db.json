@@ -1,0 +1,11 @@
+{
+    "groups": {
+        "121599492": {
+            "record_seconds": 84.0,
+            "last_message_timestamp": 1752403537.0,
+            "config": {
+                "announce_records": true
+            }
+        }
+    }
+}
