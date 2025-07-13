@@ -51,3 +51,12 @@ class InactivityService:
         """
         record = self.storage.get_record(group_id)
         return record if record is not None else 0.0
+
+    def seed_record(self, group_id: int, seconds: float) -> None:
+        """
+        Sets an initial inactivity record for a group.
+
+        :param group_id: The unique identifier for the group.
+        :param seconds: The initial record in seconds.
+        """
+        self.storage.set_record(group_id, seconds)

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from .bot.handlers import (handle_message, help_command, record_command,
-                              toggle_announcements_command)
+                              toggle_announcements_command, seed_command)
 from .services.config_service import ConfigService
 from .services.inactivity_service import InactivityService
 from .storage.json_storage import JsonStorage
@@ -45,6 +45,7 @@ def main() -> None:
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("record", record_command))
     application.add_handler(CommandHandler("toggle_announcements", toggle_announcements_command))
+    application.add_handler(CommandHandler("seed", seed_command))
 
     # Handle all messages from users to check for inactivity
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

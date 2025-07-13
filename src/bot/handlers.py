@@ -46,6 +46,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def record_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /record command."""
+    if not update.message:
+        return
     group_id = update.message.chat_id
     inactivity_service: InactivityService = context.bot_data["inactivity_service"]
     
@@ -58,6 +60,8 @@ async def record_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def toggle_announcements_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /toggle_announcements command."""
+    if not update.message:
+        return
     group_id = update.message.chat_id
     config_service: ConfigService = context.bot_data["config_service"]
 
@@ -70,9 +74,27 @@ async def toggle_announcements_command(update: Update, context: ContextTypes.DEF
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /help command."""
+    if not update.message:
+        return
     await update.message.reply_text(
         "Available commands:\n"
         "/record - Show the current inactivity record.\n"
         "/toggle_announcements - Enable or disable new record announcements.\n"
+        "/seed - Set an initial record of 10 minutes to prevent initial spam.\n"
         "/help - Show this help message."
+    )
+
+async def seed_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the /seed command to set an initial record."""
+    if not update.message:
+        return
+    group_id = update.message.chat_id
+    inactivity_service: InactivityService = context.bot_data["inactivity_service"]
+
+    # Seed with 10 minutes (600 seconds)
+    seed_value = 600.0
+    inactivity_service.seed_record(group_id, seed_value)
+
+    await update.message.reply_text(
+        f"✅ Initial record has been set to {format_duration(seed_value)}."
     )
