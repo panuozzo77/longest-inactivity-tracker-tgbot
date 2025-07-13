@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from src.storage.storage_interface import StorageInterface
 
@@ -56,6 +56,12 @@ class JsonStorage(StorageInterface):
             self.data["groups"][group_id_str] = {
                 "record_seconds": 0.0,
                 "last_message_timestamp": None,
+                "last_user_info": None,
+                "leaderboards": {
+                    "last_word": {},
+                    "silence_breaker": {}
+                },
+                "history": [],
                 "config": {
                     "announce_records": True
                 }
@@ -80,6 +86,15 @@ class JsonStorage(StorageInterface):
         group_data["last_message_timestamp"] = timestamp
         self._save_data()
 
+    def get_last_user_info(self, group_id: int) -> Optional[Dict[str, Any]]:
+        group_data = self._get_group_data(group_id)
+        return group_data.get("last_user_info")
+
+    def set_last_user_info(self, group_id: int, user_info: Dict[str, Any]) -> None:
+        group_data = self._get_group_data(group_id)
+        group_data["last_user_info"] = user_info
+        self._save_data()
+
     def get_group_config(self, group_id: int) -> Dict[str, Any]:
         group_data = self._get_group_data(group_id)
         return group_data.get("config", {"announce_records": True})
@@ -87,4 +102,32 @@ class JsonStorage(StorageInterface):
     def set_group_config(self, group_id: int, config: Dict[str, Any]) -> None:
         group_data = self._get_group_data(group_id)
         group_data["config"] = config
+        self._save_data()
+
+    def get_leaderboard(self, group_id: int) -> Dict[str, Dict[str, Dict[str, Any]]]:
+        group_data = self._get_group_data(group_id)
+        return group_data.get("leaderboards", {"last_word": {}, "silence_breaker": {}})
+
+    def update_leaderboard(self, group_id: int, user_id: int, user_name: str, board: str) -> None:
+        group_data = self._get_group_data(group_id)
+        leaderboards = group_data.get("leaderboards", {"last_word": {}, "silence_breaker": {}})
+        
+        user_id_str = str(user_id)
+        if user_id_str not in leaderboards[board]:
+            leaderboards[board][user_id_str] = {"name": user_name, "score": 0}
+        
+        leaderboards[board][user_id_str]["score"] += 1
+        # Update name in case it has changed
+        leaderboards[board][user_id_str]["name"] = user_name
+        
+        self._save_data()
+
+    def get_history(self, group_id: int) -> List[Dict[str, Any]]:
+        group_data = self._get_group_data(group_id)
+        return group_data.get("history", [])
+
+    def add_to_history(self, group_id: int, record_entry: Dict[str, Any]) -> None:
+        group_data = self._get_group_data(group_id)
+        history = group_data.get("history", [])
+        history.append(record_entry)
         self._save_data()

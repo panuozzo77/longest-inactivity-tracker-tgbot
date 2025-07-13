@@ -27,21 +27,32 @@ def format_duration(seconds: float) -> str:
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Processes every message to track inactivity."""
-    if not update.message or not update.message.date:
+    if not update.message or not update.message.date or not update.message.from_user:
         return
 
     group_id = update.message.chat_id
     timestamp = update.message.date.timestamp()
+    user = update.message.from_user
+    user_info = {"id": user.id, "name": user.full_name}
 
     inactivity_service: InactivityService = context.bot_data["inactivity_service"]
     config_service: ConfigService = context.bot_data["config_service"]
 
-    new_record = inactivity_service.update_inactivity(group_id, timestamp)
+    result = inactivity_service.update_inactivity(group_id, timestamp, user_info)
 
-    if new_record is not None and config_service.is_announcement_enabled(group_id):
+    if result and config_service.is_announcement_enabled(group_id):
+        new_record, last_user_info = result
+        
+        # Create markdown links to tag users
+        last_user_mention = f"[{last_user_info['name']}](tg://user?id={last_user_info['id']})"
+        current_user_mention = f"[{user_info['name']}](tg://user?id={user_info['id']})"
+
         await update.message.reply_text(
-            f"🎉 New inactivity record! 🎉\n\n"
-            f"The new record is {format_duration(new_record)}."
+            f"🎉 **New Inactivity Record!** 🎉\n\n"
+            f"A new record of **{format_duration(new_record)}** has been set.\n\n"
+            f"The last message was from {last_user_mention}.\n"
+            f"The silence was broken by {current_user_mention}.",
+            parse_mode='Markdown'
         )
 
 async def record_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -80,7 +91,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Available commands:\n"
         "/record - Show the current inactivity record.\n"
         "/toggle_announcements - Enable or disable new record announcements.\n"
-        "/seed - Set an initial record of 10 minutes to prevent initial spam.\n"
+        "/seed <minutes> - Set an initial record to prevent initial spam.\n"
+        "/leaderboard - Show the leaderboard for record setters.\n"
+        "/history - Show the last 5 records.\n"
         "/help - Show this help message."
     )
 
@@ -88,13 +101,72 @@ async def seed_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /seed command to set an initial record."""
     if not update.message:
         return
+        
+    if not context.args:
+        await update.message.reply_text("Please provide the initial record time in minutes.\nUsage: /seed <minutes>")
+        return
+
+    try:
+        minutes = int(context.args[0])
+        if minutes <= 0:
+            raise ValueError
+        
+        seed_value = minutes * 60.0
+        group_id = update.message.chat_id
+        inactivity_service: InactivityService = context.bot_data["inactivity_service"]
+        inactivity_service.seed_record(group_id, seed_value)
+
+        await update.message.reply_text(
+            f"✅ Initial record has been set to {format_duration(seed_value)}."
+        )
+    except (IndexError, ValueError):
+        await update.message.reply_text("Invalid input. Please provide a positive number of minutes.\nUsage: /seed <minutes>")
+
+async def leaderboard_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the /leaderboard command."""
+    if not update.message:
+        return
     group_id = update.message.chat_id
     inactivity_service: InactivityService = context.bot_data["inactivity_service"]
+    leaderboards = inactivity_service.get_leaderboards(group_id)
 
-    # Seed with 10 minutes (600 seconds)
-    seed_value = 600.0
-    inactivity_service.seed_record(group_id, seed_value)
+    response = "🏆 **Leaderboards** 🏆\n\n"
 
-    await update.message.reply_text(
-        f"✅ Initial record has been set to {format_duration(seed_value)}."
-    )
+    for board_name, board_data in leaderboards.items():
+        title = "🗣️ Last Word Champions" if board_name == "last_word" else "🤫 Silence Breakers"
+        response += f"**{title}**\n"
+        
+        if not board_data:
+            response += "No records yet.\n\n"
+            continue
+
+        sorted_board = sorted(board_data.items(), key=lambda item: item[1]['score'], reverse=True)
+        
+        for i, (user_id, data) in enumerate(sorted_board[:5]):
+            response += f"{i+1}. {data['name']} - {data['score']} times\n"
+        response += "\n"
+
+    await update.message.reply_text(response, parse_mode='Markdown')
+
+async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles the /history command."""
+    if not update.message:
+        return
+    group_id = update.message.chat_id
+    inactivity_service: InactivityService = context.bot_data["inactivity_service"]
+    history = inactivity_service.get_history(group_id)
+
+    if not history:
+        await update.message.reply_text("No record history yet.")
+        return
+
+    response = "📜 **Record History (Last 5)** 📜\n\n"
+    for entry in reversed(history[-5:]):
+        timestamp = datetime.datetime.fromtimestamp(entry['timestamp']).strftime('%Y-%m-%d %H:%M')
+        duration = format_duration(entry['record_seconds'])
+        breaker_name = entry['breaker_user']['name']
+        last_user_name = entry['last_user']['name']
+        response += f"**{duration}** on {timestamp}\n"
+        response += f"- Set by: {breaker_name} (broke the silence from {last_user_name})\n\n"
+
+    await update.message.reply_text(response, parse_mode='Markdown')

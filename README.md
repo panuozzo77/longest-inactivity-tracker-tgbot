@@ -78,7 +78,9 @@ The bot will start polling for updates from Telegram. You can add it to your gro
 *   `/start` or `/help` - Shows the help message with all available commands.
 *   `/record` - Displays the current longest inactivity record for the group.
 *   `/toggle_announcements` - Enables or disables the announcement of new records in the group.
-*   `/seed` - Sets an initial inactivity record of 10 minutes to prevent spam on first use.
+*   `/seed <minutes>` - Sets an initial inactivity record for the specified number of minutes. This is useful to prevent spam when the bot is first added to a group.
+*   `/leaderboard` - Shows the top 5 users for the "Last Word" and "Silence Breaker" awards.
+*   `/history` - Displays the last 5 inactivity records that were set in the group.
 
 ## Development (VS Code)
 

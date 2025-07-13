@@ -1,4 +1,5 @@
-from typing import Optional
+import time
+from typing import Optional, Dict, Any, Tuple, List
 
 from src.storage.storage_interface import StorageInterface
 
@@ -18,19 +19,23 @@ class InactivityService:
         """
         self.storage = storage
 
-    def update_inactivity(self, group_id: int, current_timestamp: float) -> Optional[float]:
+    def update_inactivity(self, group_id: int, current_timestamp: float, user_info: Dict[str, Any]) -> Optional[Tuple[float, Dict[str, Any]]]:
         """
-        Processes a new message timestamp and updates the inactivity record if necessary.
+        Processes a new message and updates the inactivity record if necessary.
 
         :param group_id: The unique identifier for the group.
         :param current_timestamp: The Unix timestamp of the new message.
-        :return: The new record in seconds if a new record was set, otherwise None.
+        :param user_info: Information about the user who sent the message.
+        :return: A tuple containing the new record and the previous user's info, or None.
         """
         last_timestamp = self.storage.get_last_message_timestamp(group_id)
-        self.storage.set_last_message_timestamp(group_id, current_timestamp)
+        last_user_info = self.storage.get_last_user_info(group_id)
 
-        if last_timestamp is None:
-            # This is the first message we've seen in this group, so there's no interval to calculate.
+        self.storage.set_last_message_timestamp(group_id, current_timestamp)
+        self.storage.set_last_user_info(group_id, user_info)
+
+        if last_timestamp is None or last_user_info is None:
+            # This is the first message, so no interval to calculate.
             return None
 
         interval = current_timestamp - last_timestamp
@@ -38,7 +43,21 @@ class InactivityService:
 
         if current_record is None or interval > current_record:
             self.storage.set_record(group_id, interval)
-            return interval
+            
+            # Update leaderboards
+            self.storage.update_leaderboard(group_id, last_user_info['id'], last_user_info['name'], 'last_word')
+            self.storage.update_leaderboard(group_id, user_info['id'], user_info['name'], 'silence_breaker')
+
+            # Add to history
+            history_entry = {
+                "record_seconds": interval,
+                "timestamp": time.time(),
+                "last_user": last_user_info,
+                "breaker_user": user_info
+            }
+            self.storage.add_to_history(group_id, history_entry)
+
+            return interval, last_user_info
 
         return None
 
@@ -51,6 +70,14 @@ class InactivityService:
         """
         record = self.storage.get_record(group_id)
         return record if record is not None else 0.0
+
+    def get_leaderboards(self, group_id: int) -> Dict[str, Dict[str, Dict[str, Any]]]:
+        """Retrieves the leaderboards for a group."""
+        return self.storage.get_leaderboard(group_id)
+
+    def get_history(self, group_id: int) -> List[Dict[str, Any]]:
+        """Retrieves the record history for a group."""
+        return self.storage.get_history(group_id)
 
     def seed_record(self, group_id: int, seconds: float) -> None:
         """

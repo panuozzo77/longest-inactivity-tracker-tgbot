@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 class StorageInterface(ABC):
     """
@@ -45,6 +45,68 @@ class StorageInterface(ABC):
 
         :param group_id: The unique identifier for the group.
         :param timestamp: The Unix timestamp of the message.
+        """
+        pass
+
+    @abstractmethod
+    def get_last_user_info(self, group_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves the information of the user who sent the last message.
+
+        :param group_id: The unique identifier for the group.
+        :return: A dictionary with user info (e.g., id, name), or None.
+        """
+        pass
+
+    @abstractmethod
+    def set_last_user_info(self, group_id: int, user_info: Dict[str, Any]) -> None:
+        """
+        Saves the information of the user who sent the last message.
+
+        :param group_id: The unique identifier for the group.
+        :param user_info: A dictionary containing the user's info.
+        """
+        pass
+
+    @abstractmethod
+    def get_leaderboard(self, group_id: int) -> Dict[str, Dict[str, Dict[str, Any]]]:
+        """
+        Retrieves the leaderboards for a group.
+
+        :param group_id: The unique identifier for the group.
+        :return: A dictionary containing the leaderboards.
+        """
+        pass
+
+    @abstractmethod
+    def update_leaderboard(self, group_id: int, user_id: int, user_name: str, board: str) -> None:
+        """
+        Updates a user's score on a specific leaderboard.
+
+        :param group_id: The unique identifier for the group.
+        :param user_id: The unique identifier for the user.
+        :param user_name: The name of the user.
+        :param board: The name of the leaderboard to update.
+        """
+        pass
+
+    @abstractmethod
+    def get_history(self, group_id: int) -> List[Dict[str, Any]]:
+        """
+        Retrieves the record history for a group.
+
+        :param group_id: The unique identifier for the group.
+        :return: A list of historical records.
+        """
+        pass
+
+    @abstractmethod
+    def add_to_history(self, group_id: int, record_entry: Dict[str, Any]) -> None:
+        """
+        Adds a new entry to the record history of a group.
+
+        :param group_id: The unique identifier for the group.
+        :param record_entry: The record entry to add.
         """
         pass
 
