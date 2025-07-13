@@ -36,6 +36,7 @@ class InactivityService:
 
         if last_timestamp is None or last_user_info is None:
             # This is the first message, so no interval to calculate.
+            self.storage.save()
             return None
 
         interval = current_timestamp - last_timestamp
@@ -57,11 +58,11 @@ class InactivityService:
             }
             self.storage.add_to_history(group_id, history_entry)
 
+            self.storage.save()
             return interval, last_user_info
 
-        # Save all changes to the database
+        # Save the updated timestamp and user info even if a record was not broken
         self.storage.save()
-
         return None
 
     def get_current_record(self, group_id: int) -> float:
