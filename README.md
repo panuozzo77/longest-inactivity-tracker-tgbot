@@ -88,11 +88,11 @@ Without this step, the bot will only recognize commands and will not be able to 
 
 *   `/start` or `/help` - Shows the help message with all available commands.
 *   `/record` - Displays the current longest inactivity record for the group.
-*   `/toggle_announcements` - Enables or disables the announcement of new records in the group.
-*   `/seed <minutes>` - Sets an initial inactivity record for the specified number of minutes. This is useful to prevent spam when the bot is first added to a group.
+*   `/toggle_announcements` - Enables or disables the announcement of new records in the group. (Admin only)
+*   `/seed <minutes>` - Sets an initial inactivity record for the specified number of minutes. (Admin only)
 *   `/leaderboard` - Shows the top 5 users for the "Last Word" and "Silence Breaker" awards.
 *   `/history` - Displays the last 5 inactivity records that were set in the group.
-*   `/clean` - Deletes all stored data for the group, including records, leaderboards, and history.
+*   `/clean` - Deletes all stored data for the group, including records, leaderboards, and history. (Admin only)
 
 ## Development (VS Code)
 

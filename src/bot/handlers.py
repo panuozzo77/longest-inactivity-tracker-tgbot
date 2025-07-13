@@ -1,4 +1,6 @@
 import datetime
+from functools import wraps
+from typing import Callable
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -24,6 +26,29 @@ def format_duration(seconds: float) -> str:
         parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
 
     return ", ".join(parts)
+
+def admin_only(func: Callable) -> Callable:
+    """A decorator to restrict command access to group administrators."""
+    @wraps(func)
+    async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        if not update.message or not update.message.from_user:
+            return
+        
+        user_id = update.message.from_user.id
+        chat_id = update.message.chat_id
+
+        # Admins have all permissions in private chats
+        if update.message.chat.type == 'private':
+            return await func(update, context, *args, **kwargs)
+
+        administrators = await context.bot.get_chat_administrators(chat_id)
+        is_admin = any(admin.user.id == user_id for admin in administrators)
+
+        if is_admin:
+            return await func(update, context, *args, **kwargs)
+        else:
+            await update.message.reply_text("You must be an admin to use this command.")
+    return wrapped
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Processes every message to track inactivity."""
@@ -69,6 +94,7 @@ async def record_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"{format_duration(current_record)}"
     )
 
+@admin_only
 async def toggle_announcements_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /toggle_announcements command."""
     if not update.message:
@@ -98,6 +124,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/help - Show this help message."
     )
 
+@admin_only
 async def seed_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /seed command to set an initial record."""
     if not update.message:
@@ -172,13 +199,11 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(response, parse_mode='Markdown')
 
+@admin_only
 async def clean_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /clean command to reset all group stats."""
     if not update.message:
         return
-    
-    # This is a sensitive command, so we might want to add admin checks in a real bot.
-    # For now, we'll allow anyone to use it.
     
     group_id = update.message.chat_id
     inactivity_service: InactivityService = context.bot_data["inactivity_service"]
